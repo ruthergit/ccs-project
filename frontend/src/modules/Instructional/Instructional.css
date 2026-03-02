@@ -1,0 +1,112 @@
+.instructional-container {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.instructional-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.materials-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.material-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 20px;
+  background: linear-gradient(135deg, #fff5f0 0%, #ffe5d9 100%);
+  border-radius: 12px;
+  border-left: 4px solid var(--primary-orange);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.material-item:hover {
+  transform: translateX(8px);
+  background: linear-gradient(135deg, #ffe5d9 0%, #ffd4c2 100%);
+  box-shadow: 0 4px 16px rgba(255, 107, 53, 0.15);
+  border-left-width: 6px;
+}
+
+.material-icon {
+  font-size: 2rem;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border-radius: 12px;
+  color: var(--primary-orange);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.15);
+}
+
+.material-info {
+  flex: 1;
+}
+
+.material-info strong {
+  display: block;
+  color: #2c3e50;
+  margin-bottom: 5px;
+}
+
+.material-info p {
+  margin: 5px 0;
+  color: #7f8c8d;
+}
+
+.material-info small {
+  color: #95a5a6;
+  font-size: 0.85rem;
+}
+
+.material-type {
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.material-type.syllabus {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.material-type.lesson-plan {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.material-type.course-material {
+  background: #e8f5e9;
+  color: #388e3c;
+}
+
+.mapping-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.mapping-table th {
+  background: #f8f9fa;
+  padding: 12px;
+  text-align: left;
+  font-weight: bold;
+  color: #2c3e50;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.mapping-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e0e0e0;
+}

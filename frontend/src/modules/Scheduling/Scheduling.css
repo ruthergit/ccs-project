@@ -1,0 +1,179 @@
+.scheduling-container {
+  padding: 20px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.scheduling-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.schedule-summary {
+  margin-bottom: 30px;
+}
+
+.summary-card {
+  background: white;
+  padding: 25px;
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(255, 107, 53, 0.1);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 107, 53, 0.1);
+}
+
+.summary-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(255, 107, 53, 0.15);
+  border-color: rgba(255, 107, 53, 0.3);
+}
+
+.summary-card h3 {
+  margin-top: 0;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.time-types {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.time-type {
+  padding: 18px;
+  background: linear-gradient(135deg, #fff5f0 0%, #ffe5d9 100%);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 107, 53, 0.1);
+  cursor: pointer;
+}
+
+.time-type:hover {
+  transform: translateY(-4px);
+  background: linear-gradient(135deg, #ffe5d9 0%, #ffd4c2 100%);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.15);
+  border-color: var(--primary-orange);
+}
+
+.type-label {
+  font-weight: bold;
+  color: var(--primary-orange);
+}
+
+.schedules-table-container {
+  background: white;
+  padding: 25px;
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(255, 107, 53, 0.1);
+  overflow-x: auto;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 107, 53, 0.1);
+}
+
+.schedules-table-container:hover {
+  box-shadow: 0 8px 24px rgba(255, 107, 53, 0.15);
+  border-color: rgba(255, 107, 53, 0.3);
+}
+
+.schedules-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.schedules-table th {
+  background: linear-gradient(135deg, #fff5f0 0%, #ffe5d9 100%);
+  padding: 14px;
+  text-align: left;
+  font-weight: bold;
+  color: #2c3e50;
+  border-bottom: 2px solid var(--primary-orange);
+}
+
+.schedules-table td {
+  padding: 14px;
+  border-bottom: 1px solid #e0e0e0;
+  transition: all 0.3s ease;
+}
+
+.schedules-table tr:hover td {
+  background: linear-gradient(135deg, #fff5f0 0%, #ffe5d9 100%);
+}
+
+.room-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.room-info small {
+  color: #7f8c8d;
+  font-size: 0.85rem;
+}
+
+.capacity-indicator {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.capacity-bar {
+  width: 100%;
+  height: 8px;
+  background: #ecf0f1;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.capacity-fill {
+  height: 100%;
+  transition: width 0.3s;
+  border-radius: 4px;
+}
+
+.capacity-indicator.available .capacity-fill {
+  background: linear-gradient(to right, #2ecc71, #27ae60);
+}
+
+.capacity-indicator.near-full .capacity-fill {
+  background: linear-gradient(to right, #f39c12, #e67e22);
+}
+
+.capacity-indicator.overcapacity .capacity-fill {
+  background: linear-gradient(to right, #e74c3c, #c0392b);
+}
+
+.type-badge {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.type-badge:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.type-badge.lecture {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.type-badge.laboratory {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.type-badge.pure {
+  background: #e8f5e9;
+  color: #388e3c;
+}
