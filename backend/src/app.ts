@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/user.routes";
 import studentRoutes from "./routes/student.routes";
@@ -12,7 +13,7 @@ import eventRoutes from "./routes/event.routes";
 import materialRoutes from "./routes/material.routes";
 
 const app = express();
-
+app.use(cors());
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
