@@ -13,20 +13,153 @@ datasource db {
   provider = "mysql"
 }
 
+enum Role {
+  ADMIN
+  DEAN
+  CHAIRPERSON
+  FACULTY
+  STUDENT
+}
+
+enum SubjectType {
+  LECTURE      // 2 hours, 2 units
+  LABORATORY   // 3 hours, 1 unit
+  PURE_LECTURE // 3 hours, 3 units
+}
+
+enum RoomType {
+  LECTURE_ROOM
+  LABORATORY_ROOM
+}
+
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
-  name      String?
   password  String
   role      Role     @default(STUDENT)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relationships (Examples for a CCS project)
-  // courses Course[] 
+  
+  // Profile Relations
+  studentProfile  StudentProfile?
+  facultyProfile  FacultyProfile?
 }
-enum Role {
-  STUDENT
-  TEACHER
-  ADMIN
+
+model StudentProfile {
+  id                Int      @id @default(autoincrement())
+  userId            Int      @unique
+  user              User     @relation(fields: [userId], references: [id])
+  studentId         String   @unique
+  program           String   // BSIT, BSCS
+  yearLevel         Int
+  section           String
+  achievements      String?  @db.Text
+  violations        String?  @db.Text
+  
+  // Enrollments for Load Summary
+  enrollments       Enrollment[]
+  researchAsAuthor  ResearchAuthor[]
+}
+
+model FacultyProfile {
+  id              Int      @id @default(autoincrement())
+  userId          Int      @unique
+  user            User     @relation(fields: [userId], references: [id])
+  employeeId      String   @unique
+  specialization  String?
+  minUnits        Int      @default(12)
+  maxUnits        Int      @default(21)
+  
+  // Relations
+  schedules       Schedule[]
+  researchAsAuthor ResearchAuthor[]
+  eventsOrganized Event[]
+}
+
+model Subject {
+  id          Int         @id @default(autoincrement())
+  code        String      @unique
+  title       String
+  type        SubjectType
+  hours       Int         // 2 or 3
+  units       Int         // 1, 2, or 3
+  
+  schedules   Schedule[]
+  materials   InstructionalMaterial[]
+}
+
+model Room {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  type        RoomType
+  building    String
+  floor       Int
+  capacity    Int
+  
+  schedules   Schedule[]
+}
+
+model Schedule {
+  id           Int      @id @default(autoincrement())
+  subjectId    Int
+  subject      Subject  @relation(fields: [subjectId], references: [id])
+  facultyId    Int
+  faculty      FacultyProfile @relation(fields: [facultyId], references: [id])
+  roomId       Int
+  room         Room     @relation(fields: [roomId], references: [id])
+  
+  day          String   // e.g., "Monday"
+  startTime    String   // e.g., "08:00"
+  endTime      String   // e.g., "10:00"
+  section      String
+  
+  enrollments  Enrollment[]
+}
+
+model Enrollment {
+  id          Int            @id @default(autoincrement())
+  studentId   Int
+  student     StudentProfile @relation(fields: [studentId], references: [id])
+  scheduleId  Int
+  schedule    Schedule       @relation(fields: [scheduleId], references: [id])
+
+  @@unique([studentId, scheduleId])
+}
+
+model Research {
+  id             Int      @id @default(autoincrement())
+  title          String
+  program        String
+  yearPublished  Int
+  category       String
+  evaluationScore Float   @default(0.0)
+  
+  authors        ResearchAuthor[]
+}
+
+model ResearchAuthor {
+  id               Int             @id @default(autoincrement())
+  researchId       Int
+  research         Research        @relation(fields: [researchId], references: [id])
+  studentProfileId Int?
+  student          StudentProfile? @relation(fields: [studentProfileId], references: [id])
+  facultyProfileId Int?
+  faculty          FacultyProfile? @relation(fields: [facultyProfileId], references: [id])
+}
+
+model Event {
+  id          Int      @id @default(autoincrement())
+  title       String
+  type        String   // Seminar, Workshop, etc.
+  date        DateTime
+  venue       String
+  organizerId Int
+  organizer   FacultyProfile @relation(fields: [organizerId], references: [id])
+}
+
+model InstructionalMaterial {
+  id        Int      @id @default(autoincrement())
+  subjectId Int
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+  type      String   // Syllabus, Lesson Plan, etc.
+  fileUrl   String
 }
