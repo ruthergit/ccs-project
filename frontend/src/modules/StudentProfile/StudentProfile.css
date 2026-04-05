@@ -19,8 +19,15 @@
 
 /* Header */
 .sp-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; gap: 12px; flex-wrap: wrap; }
-.sp-header h1 { font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin: 0; }
-.sp-subtitle { color: var(--text-tertiary); font-size: .875rem; margin: 4px 0 0; }
+.sp-header h1 {
+  font-size: 1.85rem; font-weight: 800;
+  letter-spacing: -.04em; margin: 0;
+  background: linear-gradient(135deg, var(--text-primary) 30%, var(--primary-orange) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  
+}.sp-subtitle { color: var(--text-tertiary); font-size: .875rem; margin: 4px 0 0; }
 
 /* Filter bar */
 .sp-filter-bar {

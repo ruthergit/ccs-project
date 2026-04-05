@@ -5,9 +5,10 @@ USE ccs_db;
 -- ── Users ──────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS users (
   id         INT AUTO_INCREMENT PRIMARY KEY,
+  name       VARCHAR(150) NOT NULL DEFAULT 'Admin',
   email      VARCHAR(191) NOT NULL UNIQUE,
   password   VARCHAR(255) NOT NULL,
-  role       ENUM('ADMIN','DEAN','CHAIRPERSON','FACULTY','STUDENT') DEFAULT 'STUDENT',
+  role       ENUM('admin') DEFAULT 'admin',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

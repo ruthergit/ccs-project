@@ -1,79 +1,53 @@
-# How to Add Your CCS Logo
+# How to Add CCS Logo
 
-## Current Status
-The system is configured to use a logo file. Currently using an SVG placeholder.
+## Quick Steps
 
-## Steps to Add Your Logo
+ur CCS logo image file** on your computer
+2. **Copy the file** to: `frontend/public/ccs.png`
+3. **Restart the dev server** if it's running
 
-### Step 1: Get Your Logo File
-Make sure you have your `ccs.png` or `ccs.jpg` file ready.
+That's it! The logo will automatically appear in the sidebar.
 
-### Step 2: Add to Public Folder
-1. Navigate to: `frontend/public/`
-2. Copy your logo file into this folder
-3. Name it exactly: `ccs.png` (or `ccs.jpg`)
+## File Requirements
 
-### Step 3: File Structure Should Look Like:
-```
-frontend/
-├── public/
-│   ├── ccs.png          ← Your logo here
-│   ├── ccs.svg          ← Current placeholder (can be deleted)
-│   └── vite.svg
-├── src/
-└── ...
-```
+- **File name**: Must be exactly `ccs.png` (or update the path in App.jsx)
+- **Location**: `frontend/public/` folder
+- **Format**: PNG (preferred with transparent background) or JPG
+- **Recommended size**: 200x200 pixels or la(square format)
+- **File size**: Under 100KB for best performance
 
-### Step 4: Restart Development Server
-```bash
-cd frontend
-npm run dev
-```
+## Current Setup
 
-## Logo Specifications
+The sidebar is configured in:
+- **Component**: `frontend/src/App.jsx` (lines with sidebar code)
+- **Styles**: `frontend/src/App.css` (sidebar and logo styles)
+- **Logo path**: `/ccs.png` (references `frontend/public/ccs.png`)
 
-### Recommended:
-- **Format**: PNG with transparent background
-- **Size**: 200x200 pixels (square)
-- **File Size**: Under 100KB
-- **Colors**: Should work with orange theme
+## If You Don't Have the Logo Yet
 
-### Acceptable:
-- **Format**: JPG, PNG, or SVG
-- **Size**: Minimum 100x100 pixels
-- **Aspect Ratio**: Square (1:1) works best
+The system includes a fallback SVG logo component at:
+- `frontend/Logo.jsx`
 
-## Fallback System
-The system has a fallback mechanism:
-1. First tries to load: `/ccs.svg`
-2. If not found, tries: `/ccs.png`
-3. If neither exists, shows broken image icon
+To use the SVG logo instead:
+1. Open `frontend/src/App.jsx`
+2. Find the line: `<img src="/ccs.png" alt="CCS Logo" className="logo-image" />`
+3. Replace with: `<Logo />`
+4. Make sure the import exists: `import Logo from './components/Logo';`
 
-## Testing Your Logo
-1. Add your logo file to `frontend/public/`
-2. Refresh your browser
-3. Check the sidebar - your logo should appear
-4. Test hover effect (should scale and rotate slightly)
+## Sidebar Location
 
-## Troubleshooting
-
-### Logo Not Showing?
-- Check file name is exactly `ccs.png` or `ccs.svg`
-- Check file is in `frontend/public/` folder
-- Clear browser cache (Ctrl+Shift+R or Cmd+Shift+R)
-- Check browser console for errors
-
-### Logo Too Large/Small?
-The logo is automatically sized to 50x50px in the sidebar.
-If it looks distorted, ensure your source image is square.
-
-### Logo Quality Issues?
-- Use PNG format with transparent background
-- Ensure minimum 200x200px resolution
-- Avoid JPEG if logo has transparency
+The sidebar code is in:
+- **File**: `frontend/src/App.jsx`
+- **Section**: Lines 50-75 (approximately)
+- **Styles**: `frontend/src/App.css` (search for `.sidebar`)
 
 ## Need Help?
-If you're having issues, check:
-1. File path: `frontend/public/ccs.png`
-2. File permissions (should be readable)
-3. Browser console for error messages
+
+If you need to:
+- Change the logo size
+- Modify sidebar colors
+- Adjust logo positioning
+
+Edit these files:
+- `frontend/src/App.css` (for styling)
+- `frontend/src/App.jsx` (for structure)

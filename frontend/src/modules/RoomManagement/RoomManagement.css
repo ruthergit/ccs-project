@@ -1,6 +1,15 @@
 /* ── Room Management ── */
 .room-container { max-width: 1400px; margin: 0 auto; }
 
+h1 {
+  font-size: 1.85rem; font-weight: 800;
+  letter-spacing: -.04em; margin: 0;
+  background: linear-gradient(135deg, var(--text-primary) 30%, var(--primary-orange) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 .rooms-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
