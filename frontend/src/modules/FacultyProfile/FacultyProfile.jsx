@@ -1,406 +1,230 @@
-import React, { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import './FacultyProfile.css';
-import { FaUser, FaGraduationCap, FaChartBar, FaFlask, FaCertificate, FaCheckCircle, FaExclamationTriangle, FaPlus, FaEdit, FaTrash, FaEye, FaSearch } from 'react-icons/fa';
+import { api } from '../../api/index.js';
+import { FaPlus, FaEdit, FaTrash, FaEye, FaSearch, FaCheckCircle, FaExclamationTriangle, FaTimes, FaArrowLeft, FaSync } from 'react-icons/fa';
+import { MdPerson } from 'react-icons/md';
 
-const FacultyProfile = () => {
-  const [viewMode, setViewMode] = useState('list');
-  const [selectedFaculty, setSelectedFaculty] = useState(null);
+const EMPTY = { employee_id:'', firstName:'', lastName:'', title:'Prof.', department:'Information Technology', email:'', phone:'', specialization:'', employmentStatus:'Full-time', maxLoad:21, minLoad:15 };
+
+const toUI = r => ({
+  id: r.id, employee_id: r.employee_id,
+  firstName: r.first_name, lastName: r.last_name, title: r.title,
+  department: r.department, email: r.email, phone: r.phone||'',
+  specialization: r.specialization||'', employmentStatus: r.employment_status,
+  minLoad: r.min_load, maxLoad: r.max_load, currentLoad: r.current_load||0,
+});
+const toDB = f => ({
+  employee_id: f.employee_id, first_name: f.firstName, last_name: f.lastName,
+  title: f.title, department: f.department, email: f.email, phone: f.phone,
+  specialization: f.specialization, employment_status: f.employmentStatus,
+  min_load: Number(f.minLoad), max_load: Number(f.maxLoad), current_load: Number(f.currentLoad||0),
+});
+
+function loadStatus(cur, min, max) {
+  if(cur>max) return 'overload'; if(cur<min) return 'underload'; return 'normal';
+}
+
+export default function FacultyProfile() {
+  const [faculty, setFaculty]     = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [saving, setSaving]       = useState(false);
+  const [error, setError]         = useState('');
+  const [view, setView]           = useState('list');
+  const [selected, setSelected]   = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState('create');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [form, setForm]           = useState({...EMPTY});
+  const [search, setSearch]       = useState('');
 
-  const [facultyList, setFacultyList] = useState([
-    {
-      id: 'FAC-2026-001',
-      firstName: 'Maria',
-      lastName: 'Santos',
-      title: 'Dr.',
-      department: 'Information Technology',
-      email: 'maria.santos@ccs.edu',
-      phone: '09187654321',
-      specialization: 'Data Science & AI',
-      employmentStatus: 'Full-time',
-      maxLoad: 21,
-      minLoad: 15,
-      currentLoad: 8
-    },
-    {
-      id: 'FAC-2026-002',
-      firstName: 'John',
-      lastName: 'Reyes',
-      title: 'Prof.',
-      department: 'Computer Science',
-      email: 'john.reyes@ccs.edu',
-      phone: '09198765432',
-      specialization: 'Software Engineering',
-      employmentStatus: 'Full-time',
-      maxLoad: 21,
-      minLoad: 15,
-      currentLoad: 18
-    }
-  ]);
+  const load = useCallback(async () => {
+    setLoading(true); setError('');
+    try { const d = await api.getFaculty(); setFaculty(d.map(toUI)); }
+    catch(e) { setError(e.message); }
+    finally { setLoading(false); }
+  }, []);
+  useEffect(()=>{ load(); },[load]);
 
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    title: 'Prof.',
-    department: 'Information Technology',
-    email: '',
-    phone: '',
-    specialization: '',
-    employmentStatus: 'Full-time',
-    maxLoad: 21,
-    minLoad: 15
+  const filtered = faculty.filter(f => {
+    const q=search.toLowerCase();
+    return !q||f.firstName.toLowerCase().includes(q)||f.lastName.toLowerCase().includes(q)||f.department.toLowerCase().includes(q);
   });
 
-  const handleCreate = () => {
-    setModalMode('create');
-    setFormData({
-      firstName: '',
-      lastName: '',
-      title: 'Prof.',
-      department: 'Information Technology',
-      email: '',
-      phone: '',
-      specialization: '',
-      employmentStatus: 'Full-time',
-      maxLoad: 21,
-      minLoad: 15
-    });
-    setShowModal(true);
+  const openCreate = ()=>{ setForm({...EMPTY}); setModalMode('create'); setShowModal(true); };
+  const openEdit   = f =>{ setForm({...f}); setModalMode('edit'); setShowModal(true); };
+  const openDetail = f =>{ setSelected(f); setView('detail'); };
+  const goBack     = ()=>{ setView('list'); setSelected(null); };
+  const ff = (k,v) => setForm(p=>({...p,[k]:v}));
+
+  const handleDelete = async id => {
+    if(!window.confirm('Delete this faculty member?')) return;
+    try { await api.deleteFaculty(id); setFaculty(prev=>prev.filter(f=>f.id!==id)); if(selected?.id===id) goBack(); }
+    catch(e) { alert('Delete failed: '+e.message); }
   };
 
-  const handleEdit = (faculty) => {
-    setModalMode('edit');
-    setFormData(faculty);
-    setShowModal(true);
-  };
-
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this faculty member?')) {
-      setFacultyList(facultyList.filter(f => f.id !== id));
-      if (selectedFaculty?.id === id) {
-        setViewMode('list');
+  const handleSubmit = async e => {
+    e.preventDefault(); setSaving(true);
+    try {
+      if(modalMode==='create') {
+        const created = await api.createFaculty(toDB(form));
+        setFaculty(prev=>[toUI(created),...prev]);
+      } else {
+        const updated = await api.updateFaculty(form.id, toDB(form));
+        const ui = toUI(updated);
+        setFaculty(prev=>prev.map(f=>f.id===form.id?ui:f));
+        if(selected?.id===form.id) setSelected(ui);
       }
-    }
+      setShowModal(false);
+    } catch(e) { alert('Save failed: '+e.message); }
+    finally { setSaving(false); }
   };
 
-  const handleView = (faculty) => {
-    setSelectedFaculty(faculty);
-    setViewMode('detail');
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (modalMode === 'create') {
-      const newFaculty = {
-        ...formData,
-        id: `FAC-2026-${String(facultyList.length + 1).padStart(3, '0')}`,
-        currentLoad: 0
-      };
-      setFacultyList([...facultyList, newFaculty]);
-    } else {
-      setFacultyList(facultyList.map(f => f.id === formData.id ? formData : f));
-      if (selectedFaculty?.id === formData.id) {
-        setSelectedFaculty(formData);
-      }
-    }
-    setShowModal(false);
-  };
-
-  const filteredFaculty = facultyList.filter(faculty =>
-    faculty.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    faculty.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    faculty.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    faculty.department.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const getLoadStatus = (currentLoad, minLoad, maxLoad) => {
-    if (currentLoad > maxLoad) return 'overload';
-    if (currentLoad < minLoad) return 'underload';
-    return 'normal';
-  };
-
-  if (viewMode === 'detail' && selectedFaculty) {
-    const loadStatus = getLoadStatus(selectedFaculty.currentLoad, selectedFaculty.minLoad, selectedFaculty.maxLoad);
-
+  if(view==='detail'&&selected) {
+    const ls = loadStatus(selected.currentLoad, selected.minLoad, selected.maxLoad);
     return (
-      <div className="faculty-profile-container">
-        <div className="profile-actions">
-          <button className="btn-back" onClick={() => setViewMode('list')}>
-            ← Back to List
-          </button>
-          <div className="action-buttons">
-            <button className="btn-edit-action" onClick={() => handleEdit(selectedFaculty)}>
-              <FaEdit /> Edit
-            </button>
-            <button className="btn-delete-action" onClick={() => handleDelete(selectedFaculty.id)}>
-              <FaTrash /> Delete
-            </button>
+      <div className="faculty-container">
+        <div className="back-bar">
+          <button className="btn-back" onClick={goBack}><FaArrowLeft/> Back to Faculty</button>
+          <div style={{display:'flex',gap:'8px'}}>
+            <button className="btn-info" onClick={()=>openEdit(selected)}><FaEdit/> Edit</button>
+            <button className="btn-danger" onClick={()=>handleDelete(selected.id)}><FaTrash/> Delete</button>
           </div>
         </div>
-
-        <div className="profile-header faculty-header">
-          <div className="profile-avatar">
-            <div className="avatar-circle">{selectedFaculty.firstName[0]}{selectedFaculty.lastName[0]}</div>
-          </div>
-          <div className="profile-title">
-            <h1>{selectedFaculty.title} {selectedFaculty.firstName} {selectedFaculty.lastName}</h1>
-            <p>{selectedFaculty.id} • {selectedFaculty.department}</p>
-            <p>{selectedFaculty.specialization}</p>
-          </div>
-          <div className="load-indicator">
-            <div className={`load-badge ${loadStatus}`}>
-              {loadStatus === 'overload' && <><FaExclamationTriangle /> Overload</>}
-              {loadStatus === 'underload' && <><FaExclamationTriangle /> Underload</>}
-              {loadStatus === 'normal' && <><FaCheckCircle /> Normal Load</>}
-            </div>
-            <div className="load-stats">
-              <span>{selectedFaculty.currentLoad} / {selectedFaculty.maxLoad} units</span>
+        <div className="hero-banner" style={{marginBottom:'1.5rem'}}>
+          <div className="hero-avatar">{selected.firstName[0]}{selected.lastName[0]}</div>
+          <div className="hero-info">
+            <h1>{selected.title} {selected.firstName} {selected.lastName}</h1>
+            <p>{selected.employee_id} &bull; {selected.department} &bull; {selected.specialization}</p>
+            <div style={{marginTop:'8px'}}>
+              <span className={`load-badge ${ls}`}>
+                {ls==='normal'&&<><FaCheckCircle/> Normal Load</>}
+                {ls==='overload'&&<><FaExclamationTriangle/> Overload</>}
+                {ls==='underload'&&<><FaExclamationTriangle/> Underload</>}
+              </span>
             </div>
           </div>
         </div>
-
-        <div className="profile-sections">
-          <div className="section-card">
-            <h3><FaUser /> Professional Information</h3>
-            <div className="info-grid">
-              <div className="info-item">
-                <label>Email:</label>
-                <span>{selectedFaculty.email}</span>
-              </div>
-              <div className="info-item">
-                <label>Phone:</label>
-                <span>{selectedFaculty.phone}</span>
-              </div>
-              <div className="info-item">
-                <label>Employment Status:</label>
-                <span>{selectedFaculty.employmentStatus}</span>
-              </div>
-              <div className="info-item">
-                <label>Specialization:</label>
-                <span>{selectedFaculty.specialization}</span>
-              </div>
+        <div className="faculty-detail-grid">
+          <div className="card">
+            <div className="card-title"><MdPerson/> Professional Information</div>
+            <div className="info-list">
+              <div className="info-row"><span className="info-label">Email</span><span className="info-value">{selected.email}</span></div>
+              <div className="info-row"><span className="info-label">Phone</span><span className="info-value">{selected.phone}</span></div>
+              <div className="info-row"><span className="info-label">Status</span><span className="info-value">{selected.employmentStatus}</span></div>
+              <div className="info-row"><span className="info-label">Specialization</span><span className="info-value">{selected.specialization}</span></div>
             </div>
           </div>
-
-          <div className="section-card">
-            <h3><FaChartBar /> Teaching Load Overview</h3>
-            <div className="load-summary">
-              <div className="summary-item">
-                <span className="summary-label">Current Load:</span>
-                <span className="summary-value">{selectedFaculty.currentLoad} units</span>
+          <div className="card">
+            <div className="card-title">Teaching Load</div>
+            <div className="load-summary-grid">
+              <div className="load-summary-item"><div className="lsi-val">{selected.currentLoad}</div><div className="lsi-lbl">Current</div></div>
+              <div className="load-summary-item"><div className="lsi-val">{selected.minLoad}</div><div className="lsi-lbl">Min</div></div>
+              <div className="load-summary-item"><div className="lsi-val">{selected.maxLoad}</div><div className="lsi-lbl">Max</div></div>
+            </div>
+            <div style={{marginTop:'14px'}}>
+              <div className="progress-track">
+                <div className={`progress-fill ${ls==='overload'?'progress-fill-red':ls==='underload'?'progress-fill-yellow':'progress-fill-green'}`}
+                  style={{width:`${Math.min((selected.currentLoad/selected.maxLoad)*100,100)}%`}}/>
               </div>
-              <div className="summary-item">
-                <span className="summary-label">Min Load:</span>
-                <span className="summary-value">{selectedFaculty.minLoad} units</span>
-              </div>
-              <div className="summary-item">
-                <span className="summary-label">Max Load:</span>
-                <span className="summary-value">{selectedFaculty.maxLoad} units</span>
-              </div>
+              <div style={{fontSize:'.75rem',color:'var(--text-tertiary)',marginTop:'6px',textAlign:'right'}}>{selected.currentLoad} / {selected.maxLoad} units</div>
             </div>
           </div>
         </div>
+        {showModal&&<FacultyModal mode={modalMode} form={form} ff={ff} onSubmit={handleSubmit} onClose={()=>setShowModal(false)} saving={saving}/>}
       </div>
     );
   }
 
   return (
-    <div className="faculty-profile-container">
-      <div className="list-header">
-        <h1>Faculty Management</h1>
-        <button className="btn-primary" onClick={handleCreate}>
-          <FaPlus /> Add Faculty
-        </button>
-      </div>
-
-      <div className="search-filter-bar">
-        <div className="search-box">
-          <FaSearch className="search-icon" />
-          <input
-            type="text"
-            placeholder="Search by name, ID, or department..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+    <div className="faculty-container">
+      <div className="page-header">
+        <div className="page-header-left"><h1>Faculty Management</h1><p>{faculty.length} faculty members</p></div>
+        <div style={{display:'flex',gap:'8px'}}>
+          <button className="btn-secondary" onClick={load} title="Refresh"><FaSync/></button>
+          <button className="btn-primary" onClick={openCreate}><FaPlus/> Add Faculty</button>
         </div>
       </div>
-
+      {error&&<div style={{background:'#fef2f2',color:'#ef4444',padding:'12px 16px',borderRadius:'10px',marginBottom:'1rem',border:'1px solid #fecaca'}}>⚠ {error}</div>}
+      <div className="filter-bar" style={{marginBottom:'1.25rem'}}>
+        <div className="search-wrap" style={{flex:1}}>
+          <FaSearch/>
+          <input className="search-input" placeholder="Search by name or department…" value={search} onChange={e=>setSearch(e.target.value)}/>
+        </div>
+        {search&&<button className="sp-clear-btn" onClick={()=>setSearch('')}><FaTimes/> Clear</button>}
+      </div>
+      {loading&&<div className="empty-state">Loading faculty from database…</div>}
       <div className="faculty-grid">
-        {filteredFaculty.map(faculty => {
-          const loadStatus = getLoadStatus(faculty.currentLoad, faculty.minLoad, faculty.maxLoad);
+        {!loading&&filtered.length===0&&<div className="empty-state">No faculty members found.</div>}
+        {filtered.map(f=>{
+          const ls=loadStatus(f.currentLoad,f.minLoad,f.maxLoad);
           return (
-            <div key={faculty.id} className="faculty-card">
+            <div key={f.id} className="faculty-card">
               <div className="faculty-card-header">
-                <div className="faculty-avatar-small">
-                  {faculty.firstName[0]}{faculty.lastName[0]}
-                </div>
-                <div className="faculty-info">
-                  <h3>{faculty.title} {faculty.firstName} {faculty.lastName}</h3>
-                  <p>{faculty.id}</p>
-                </div>
-                <div className={`load-badge-small ${loadStatus}`}>
-                  {loadStatus === 'overload' && '⚠️'}
-                  {loadStatus === 'underload' && '⚠️'}
-                  {loadStatus === 'normal' && '✓'}
-                </div>
+                <div className="faculty-avatar">{f.firstName[0]}{f.lastName[0]}</div>
+                <div className="faculty-card-meta"><h3>{f.title} {f.firstName} {f.lastName}</h3><p>{f.employee_id}</p></div>
+                <span className={`load-badge ${ls}`} style={{fontSize:'.68rem',padding:'3px 8px'}}>{ls==='normal'?'✓':'⚠'} {ls}</span>
               </div>
               <div className="faculty-card-body">
-                <div className="info-row">
-                  <span className="label">Department:</span>
-                  <span className="value">{faculty.department}</span>
-                </div>
-                <div className="info-row">
-                  <span className="label">Specialization:</span>
-                  <span className="value">{faculty.specialization}</span>
-                </div>
-                <div className="info-row">
-                  <span className="label">Load:</span>
-                  <span className="value">{faculty.currentLoad}/{faculty.maxLoad} units</span>
-                </div>
-                <div className="info-row">
-                  <span className="label">Email:</span>
-                  <span className="value">{faculty.email}</span>
-                </div>
+                <div className="fc-row"><span className="fc-label">Department</span><span className="fc-value">{f.department}</span></div>
+                <div className="fc-row"><span className="fc-label">Specialization</span><span className="fc-value">{f.specialization}</span></div>
+                <div className="fc-row"><span className="fc-label">Load</span><span className="fc-value">{f.currentLoad}/{f.maxLoad} units</span></div>
+                <div className="fc-row"><span className="fc-label">Status</span><span className="fc-value">{f.employmentStatus}</span></div>
               </div>
               <div className="faculty-card-actions">
-                <button className="btn-view" onClick={() => handleView(faculty)}>
-                  <FaEye /> View
-                </button>
-                <button className="btn-edit-small" onClick={() => handleEdit(faculty)}>
-                  <FaEdit />
-                </button>
-                <button className="btn-delete-small" onClick={() => handleDelete(faculty.id)}>
-                  <FaTrash />
-                </button>
+                <button className="btn-primary" style={{flex:1}} onClick={()=>openDetail(f)}><FaEye/> View</button>
+                <button className="btn-icon btn-icon-info" onClick={()=>openEdit(f)} title="Edit"><FaEdit/></button>
+                <button className="btn-icon btn-icon-danger" onClick={()=>handleDelete(f.id)} title="Delete"><FaTrash/></button>
               </div>
             </div>
           );
         })}
       </div>
-
-      {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <h2>{modalMode === 'create' ? 'Add New Faculty' : 'Edit Faculty'}</h2>
-            <form className="faculty-form" onSubmit={handleSubmit}>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Title *</label>
-                  <select
-                    value={formData.title}
-                    onChange={(e) => setFormData({...formData, title: e.target.value})}
-                    required
-                  >
-                    <option value="Prof.">Prof.</option>
-                    <option value="Dr.">Dr.</option>
-                    <option value="Mr.">Mr.</option>
-                    <option value="Ms.">Ms.</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>First Name *</label>
-                  <input
-                    type="text"
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Last Name *</label>
-                  <input
-                    type="text"
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Department *</label>
-                  <select
-                    value={formData.department}
-                    onChange={(e) => setFormData({...formData, department: e.target.value})}
-                    required
-                  >
-                    <option value="Information Technology">Information Technology</option>
-                    <option value="Computer Science">Computer Science</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Employment Status *</label>
-                  <select
-                    value={formData.employmentStatus}
-                    onChange={(e) => setFormData({...formData, employmentStatus: e.target.value})}
-                    required
-                  >
-                    <option value="Full-time">Full-time</option>
-                    <option value="Part-time">Part-time</option>
-                  </select>
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Specialization *</label>
-                <input
-                  type="text"
-                  value={formData.specialization}
-                  onChange={(e) => setFormData({...formData, specialization: e.target.value})}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Email *</label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Phone *</label>
-                <input
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                  required
-                />
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Min Load (units) *</label>
-                  <input
-                    type="number"
-                    value={formData.minLoad}
-                    onChange={(e) => setFormData({...formData, minLoad: parseInt(e.target.value)})}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Max Load (units) *</label>
-                  <input
-                    type="number"
-                    value={formData.maxLoad}
-                    onChange={(e) => setFormData({...formData, maxLoad: parseInt(e.target.value)})}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="form-actions">
-                <button type="button" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn-primary">
-                  {modalMode === 'create' ? 'Create Faculty' : 'Update Faculty'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {showModal&&<FacultyModal mode={modalMode} form={form} ff={ff} onSubmit={handleSubmit} onClose={()=>setShowModal(false)} saving={saving}/>}
     </div>
   );
-};
+}
 
-export default FacultyProfile;
+function FacultyModal({ mode, form, ff, onSubmit, onClose, saving }) {
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-box" onClick={e=>e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>{mode==='create'?'Add New Faculty':'Edit Faculty'}</h2>
+          <button className="modal-close" onClick={onClose}><FaTimes/></button>
+        </div>
+        <div className="modal-body">
+          <form onSubmit={onSubmit} style={{display:'flex',flexDirection:'column',gap:'14px'}}>
+            <div className="form-section-label">Personal Information</div>
+            <div className="form-group"><label>Employee ID *</label><input required value={form.employee_id||''} onChange={e=>ff('employee_id',e.target.value)} placeholder="FAC-2026-004"/></div>
+            <div className="form-grid">
+              <div className="form-group"><label>Title</label>
+                <select value={form.title} onChange={e=>ff('title',e.target.value)}><option>Prof.</option><option>Dr.</option><option>Mr.</option><option>Ms.</option></select>
+              </div>
+              <div className="form-group"><label>First Name *</label><input required value={form.firstName} onChange={e=>ff('firstName',e.target.value)}/></div>
+              <div className="form-group"><label>Last Name *</label><input required value={form.lastName} onChange={e=>ff('lastName',e.target.value)}/></div>
+            </div>
+            <div className="form-section-label">Professional Details</div>
+            <div className="form-grid">
+              <div className="form-group"><label>Department *</label>
+                <select value={form.department} onChange={e=>ff('department',e.target.value)}><option>Information Technology</option><option>Computer Science</option></select>
+              </div>
+              <div className="form-group"><label>Employment Status</label>
+                <select value={form.employmentStatus} onChange={e=>ff('employmentStatus',e.target.value)}><option>Full-time</option><option>Part-time</option></select>
+              </div>
+            </div>
+            <div className="form-group"><label>Specialization *</label><input required value={form.specialization} onChange={e=>ff('specialization',e.target.value)}/></div>
+            <div className="form-group"><label>Email *</label><input required type="email" value={form.email} onChange={e=>ff('email',e.target.value)}/></div>
+            <div className="form-group"><label>Phone *</label><input required value={form.phone} onChange={e=>ff('phone',e.target.value)}/></div>
+            <div className="form-grid">
+              <div className="form-group"><label>Min Load</label><input type="number" value={form.minLoad} onChange={e=>ff('minLoad',+e.target.value)}/></div>
+              <div className="form-group"><label>Max Load</label><input type="number" value={form.maxLoad} onChange={e=>ff('maxLoad',+e.target.value)}/></div>
+            </div>
+            <div className="form-actions">
+              <button type="button" className="btn-cancel" onClick={onClose} disabled={saving}>Cancel</button>
+              <button type="submit" className="btn-primary" disabled={saving}>{saving?'Saving…':mode==='create'?'Create Faculty':'Save Changes'}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
