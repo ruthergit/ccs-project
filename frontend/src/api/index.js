@@ -1,7 +1,5 @@
 // This checks if we are on the live site or local
-export const BASE = import.meta.env.PROD
-  ? "https://ccs-project-zvmw.onrender.com/api"
-  : "http://localhost:5000/api";
+export const BASE = import.meta.env.VITE_API_URL;
 
 function getToken() {
   return localStorage.getItem("ccs_token");
