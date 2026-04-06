@@ -43,6 +43,7 @@ export const getDashboardStats = async (_req, res) => {
     );
 
     res.json({
+      // We use [0] because query returns an array, and the first element is our row
       totalStudents: totalStudents[0]?.totalStudents || 0,
       totalFaculty: totalFaculty[0]?.totalFaculty || 0,
       upcomingEvents: upcomingEvents[0]?.upcomingEvents || 0,
