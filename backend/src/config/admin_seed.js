@@ -3,7 +3,7 @@
  *   node src/config/admin_seed.js
  */
 import pool from './db.js';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 const admins = [
   { name: 'System Admin', email: 'admin@ccs.edu', password: 'admin123' },
