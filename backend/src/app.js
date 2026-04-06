@@ -15,13 +15,7 @@ import dashboardRoutes from './routes/dashboard.routes.js';
 const app = express();
 
 // Allow any localhost port (Vite uses 5173-5176+)
-app.use(cors({
-  origin: (origin, cb) => {
-    if (!origin || /^http:\/\/localhost(:\d+)?$/.test(origin)) return cb(null, true);
-    cb(new Error('Not allowed by CORS'));
-  },
-  credentials: true,
-}));
+app.use(cors());
 app.use(express.json());
 
 // Root
