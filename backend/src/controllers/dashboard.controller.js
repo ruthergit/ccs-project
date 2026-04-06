@@ -8,9 +8,11 @@ export const getDashboardStats = async (_req, res) => {
     const [totalFaculty] = await pool.query(
       "SELECT COUNT(*) AS totalFaculty  FROM faculty",
     );
-    const [upcomingEvents] = await pool.query(
-      "SELECT COUNT(*) AS upcomingEvents FROM events WHERE status = 'Upcoming'",
+    const [upcomingEventsRows] = await pool.query(
+      "SELECT COUNT(*) AS total FROM events WHERE status = ?",
+      ["Upcoming"],
     );
+    const upcomingEvents = upcomingEventsRows[0]?.total || 0;
     const [totalSchedules] = await pool.query(
       "SELECT COUNT(*) AS totalSchedules FROM schedules",
     );
