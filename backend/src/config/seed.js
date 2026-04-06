@@ -136,6 +136,17 @@ async function seed() {
       )
     `);
 
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS schedules (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        subject_id INT,
+        room_id VARCHAR(20),
+        day VARCHAR(20),
+        time_start TIME,
+        time_end TIME
+      )
+    `);
+
     console.log("🌱 Tables ready. Inserting seed data...");
 
     // --- DATA INSERTION ---
