@@ -1,50 +1,59 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext.jsx';
-import { MdLightMode, MdDarkMode } from 'react-icons/md';
-import { FaEye, FaEyeSlash, FaLock, FaEnvelope, FaShieldAlt } from 'react-icons/fa';
-import './Login.css';
-import { BASE } from '../api/index.js';
+import { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext.jsx";
+import { MdLightMode, MdDarkMode } from "react-icons/md";
+import {
+  FaEye,
+  FaEyeSlash,
+  FaLock,
+  FaEnvelope,
+  FaShieldAlt,
+} from "react-icons/fa";
+import "./Login.css";
+import { BASE } from "../api/index.js";
 
 export default function Login() {
   const { login } = useAuth();
-  const [email,       setEmail]       = useState('');
-  const [password,    setPassword]    = useState('');
-  const [showPass,    setShowPass]    = useState(false);
-  const [loading,     setLoading]     = useState(false);
-  const [error,       setError]       = useState('');
-  const [toast,       setToast]       = useState('');
-  const [darkMode,    setDarkMode]    = useState(() => localStorage.getItem('theme') === 'dark');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [toast, setToast] = useState("");
+  const [darkMode, setDarkMode] = useState(
+    () => localStorage.getItem("theme") === "dark",
+  );
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', darkMode);
-    localStorage.setItem('theme', darkMode ? 'dark' : 'light');
+    document.documentElement.classList.toggle("dark", darkMode);
+    localStorage.setItem("theme", darkMode ? "dark" : "light");
   }, [darkMode]);
 
   /* auto-dismiss toast */
   useEffect(() => {
     if (!toast) return;
-    const t = setTimeout(() => setToast(''), 3000);
+    const t = setTimeout(() => setToast(""), 3000);
     return () => clearTimeout(t);
   }, [toast]);
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(''); setLoading(true);
+    setError("");
+    setLoading(true);
     try {
-      const res = await fetch(`${BASE}auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch(`${BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.message || 'Login failed');
+        setError(data.message || "Login failed");
         return;
       }
       setToast(`Welcome back, ${data.user.name}!`);
       setTimeout(() => login(data.token, data.user), 600);
     } catch {
-      setError('Cannot connect to server. Make sure the backend is running.');
+      setError("Cannot connect to server. Make sure the backend is running.");
     } finally {
       setLoading(false);
     }
@@ -53,7 +62,11 @@ export default function Login() {
   return (
     <div className="login-page">
       {/* Theme toggle */}
-      <button className="login-theme-btn" onClick={() => setDarkMode(d => !d)} title="Toggle theme">
+      <button
+        className="login-theme-btn"
+        onClick={() => setDarkMode((d) => !d)}
+        title="Toggle theme"
+      >
         {darkMode ? <MdLightMode size={20} /> : <MdDarkMode size={20} />}
       </button>
 
@@ -66,7 +79,9 @@ export default function Login() {
           <div className="login-logo-ring">
             <img src="/ccs.png" alt="CCS" className="login-logo-img" />
           </div>
-          <div className="login-shield"><FaShieldAlt size={14} /></div>
+          <div className="login-shield">
+            <FaShieldAlt size={14} />
+          </div>
         </div>
 
         <h1 className="login-title">CCS Profiling System</h1>
@@ -83,7 +98,10 @@ export default function Login() {
                 type="email"
                 placeholder="admin@ccs.edu"
                 value={email}
-                onChange={e => { setEmail(e.target.value); setError(''); }}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError("");
+                }}
                 required
                 autoComplete="email"
               />
@@ -97,19 +115,22 @@ export default function Login() {
               <FaLock className="login-input-icon" />
               <input
                 id="password"
-                type={showPass ? 'text' : 'password'}
+                type={showPass ? "text" : "password"}
                 placeholder="Enter your password"
                 value={password}
-                onChange={e => { setPassword(e.target.value); setError(''); }}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError("");
+                }}
                 required
                 autoComplete="current-password"
               />
               <button
                 type="button"
                 className="login-eye-btn"
-                onClick={() => setShowPass(s => !s)}
+                onClick={() => setShowPass((s) => !s)}
                 tabIndex={-1}
-                aria-label={showPass ? 'Hide password' : 'Show password'}
+                aria-label={showPass ? "Hide password" : "Show password"}
               >
                 {showPass ? <FaEyeSlash /> : <FaEye />}
               </button>
@@ -125,9 +146,7 @@ export default function Login() {
 
           {/* Submit */}
           <button type="submit" className="login-btn" disabled={loading}>
-            {loading
-              ? <span className="login-spinner" />
-              : 'Sign In'}
+            {loading ? <span className="login-spinner" /> : "Sign In"}
           </button>
         </form>
 
