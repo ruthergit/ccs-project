@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { MdLightMode, MdDarkMode } from 'react-icons/md';
 import { FaEye, FaEyeSlash, FaLock, FaEnvelope, FaShieldAlt } from 'react-icons/fa';
 import './Login.css';
+import { BASE } from '../api/index.js';
 
 export default function Login() {
   const { login } = useAuth();
@@ -30,7 +31,7 @@ export default function Login() {
     e.preventDefault();
     setError(''); setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/auth/login', {
+      const res = await fetch(`${BASE}auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

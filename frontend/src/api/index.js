@@ -1,5 +1,5 @@
 // This checks if we are on the live site or local
-const BASE = import.meta.env.PROD
+export const BASE = import.meta.env.PROD
   ? "https://ccs-project-zvmw.onrender.com/api"
   : "http://localhost:5000/api";
 
