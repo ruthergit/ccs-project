@@ -2,22 +2,20 @@ import pool from "../config/db.js";
 
 export const getDashboardStats = async (_req, res) => {
   try {
-    const [totalStudents] = await pool.query(
-      "SELECT COUNT(*) AS totalStudents FROM students",
+    // 1. Basic Counts
+    const [students] = await pool.query(
+      "SELECT COUNT(*) AS total FROM students",
     );
-    const [totalFaculty] = await pool.query(
-      "SELECT COUNT(*) AS totalFaculty  FROM faculty",
-    );
-    const [upcomingEventsRows] = await pool.query(
+    const [faculty] = await pool.query("SELECT COUNT(*) AS total FROM faculty");
+    const [events] = await pool.query(
       "SELECT COUNT(*) AS total FROM events WHERE status = ?",
       ["Upcoming"],
     );
-    const upcomingEvents = upcomingEventsRows[0]?.total || 0;
-    const [totalSchedules] = await pool.query(
-      "SELECT COUNT(*) AS totalSchedules FROM schedules",
+    const [schedules] = await pool.query(
+      "SELECT COUNT(*) AS total FROM schedules",
     );
 
-    // top skill
+    // 2. Top Skill Logic
     const [skillRows] = await pool.query(
       'SELECT skills FROM students WHERE skills IS NOT NULL AND skills != ""',
     );
@@ -34,22 +32,26 @@ export const getDashboardStats = async (_req, res) => {
     const topSkill =
       Object.entries(skillCount).sort((a, b) => b[1] - a[1])[0]?.[0] || "—";
 
-    // recent students
+    // 3. Recent Students
     const [recentStudents] = await pool.query(
       "SELECT first_name, last_name, program, year_level, skills FROM students ORDER BY added_date DESC LIMIT 3",
     );
 
-    // top researchers
+    // 4. Top Researchers (Fixed GROUP BY for Cloud MySQL)
     const [topResearchers] = await pool.query(
-      "SELECT r.title, r.evaluation_score, GROUP_CONCAT(a.author_name) AS authors FROM research r LEFT JOIN research_authors a ON a.research_id = r.id GROUP BY r.id ORDER BY r.evaluation_score DESC LIMIT 3",
+      `SELECT r.title, r.evaluation_score, GROUP_CONCAT(a.author_name) AS authors 
+       FROM research r 
+       LEFT JOIN research_authors a ON a.research_id = r.id 
+       GROUP BY r.id, r.title, r.evaluation_score 
+       ORDER BY r.evaluation_score DESC LIMIT 3`,
     );
 
+    // 5. Final Response (Pulling values correctly)
     res.json({
-      // We use [0] because query returns an array, and the first element is our row
-      totalStudents: totalStudents[0]?.totalStudents || 0,
-      totalFaculty: totalFaculty[0]?.totalFaculty || 0,
-      upcomingEvents: upcomingEvents[0]?.upcomingEvents || 0,
-      totalSchedules: totalSchedules[0]?.totalSchedules || 0,
+      totalStudents: students[0]?.total || 0,
+      totalFaculty: faculty[0]?.total || 0,
+      upcomingEvents: events[0]?.total || 0,
+      totalSchedules: schedules[0]?.total || 0,
       topSkill,
       recentStudents: recentStudents.map((s) => ({
         name: `${s.first_name} ${s.last_name}`,
@@ -65,6 +67,7 @@ export const getDashboardStats = async (_req, res) => {
       })),
     });
   } catch (err) {
+    console.error("Dashboard Controller Error:", err.message);
     res.status(500).json({ message: err.message });
   }
 };
